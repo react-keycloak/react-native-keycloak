@@ -53,6 +53,17 @@ interface ICreateLoginUrlOptions {
   pkceMethod?: KeycloakPkceMethod;
 }
 
+interface ICreateLogoutUrlOptions {
+  endpoint: string;
+
+  redirectUri: string;
+}
+
+interface ICreateAccountUrlOptions {
+  clientConfig: IKeycloakReactNativeClientConfig;
+  redirectUri: string;
+}
+
 export function createLoginUrl(options: ICreateLoginUrlOptions): string {
   const baseUrl = options.endpoint;
 
@@ -118,12 +129,6 @@ export function createLoginUrl(options: ICreateLoginUrlOptions): string {
   return url;
 }
 
-interface ICreateLogoutUrlOptions {
-  endpoint: string;
-
-  redirectUri: string;
-}
-
 export function createLogoutUrl(options: ICreateLogoutUrlOptions) {
   return `${options.endpoint}?redirect_uri=${encodeURIComponent(
     options.redirectUri
@@ -135,11 +140,6 @@ export function createRegisterUrl(options: ICreateLoginUrlOptions) {
     ...options,
     action: 'register',
   });
-}
-
-interface ICreateAccountUrlOptions {
-  clientConfig: IKeycloakReactNativeClientConfig;
-  redirectUri: string;
 }
 
 export function createAccountUrl({
@@ -167,4 +167,70 @@ function getRealmUrl(realm: string, authServerUrl?: string) {
   } else {
     return authServerUrl + '/realms/' + encodeURIComponent(realm);
   }
+}
+
+export function setupOidcEndoints({
+  oidcConfiguration,
+  realm,
+  authServerUrl,
+}: {
+  realm: string;
+  authServerUrl?: string;
+  oidcConfiguration?: { [key: string]: any };
+}) {
+  if (!oidcConfiguration) {
+    return {
+      authorize: function () {
+        return (
+          getRealmUrl(realm, authServerUrl) + '/protocol/openid-connect/auth'
+        );
+      },
+      token: function () {
+        return (
+          getRealmUrl(realm, authServerUrl) + '/protocol/openid-connect/token'
+        );
+      },
+      logout: function () {
+        return (
+          getRealmUrl(realm, authServerUrl) + '/protocol/openid-connect/logout'
+        );
+      },
+      register: function () {
+        return (
+          getRealmUrl(realm, authServerUrl) +
+          '/protocol/openid-connect/registrations'
+        );
+      },
+      userinfo: function () {
+        return (
+          getRealmUrl(realm, authServerUrl) +
+          '/protocol/openid-connect/userinfo'
+        );
+      },
+    };
+  }
+
+  return {
+    authorize: function () {
+      return oidcConfiguration.authorization_endpoint;
+    },
+    token: function () {
+      return oidcConfiguration.token_endpoint;
+    },
+    logout: function () {
+      if (!oidcConfiguration.end_session_endpoint) {
+        throw 'Not supported by the OIDC server';
+      }
+      return oidcConfiguration.end_session_endpoint;
+    },
+    register: function () {
+      throw 'Redirection to "Register user" page not supported in standard OIDC mode';
+    },
+    userinfo: function () {
+      if (!oidcConfiguration.userinfo_endpoint) {
+        throw 'Not supported by the OIDC server';
+      }
+      return oidcConfiguration.userinfo_endpoint;
+    },
+  };
 }

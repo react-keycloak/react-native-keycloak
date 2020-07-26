@@ -11,6 +11,8 @@ export interface IKeycloakReactNativeClientConfig {
    * Client identifier, example: 'myapp'
    */
   clientId: string;
+
+  redirectUri?: string;
 }
 
 export type KeycloakOnLoad = 'login-required' | 'check-sso';
@@ -23,3 +25,43 @@ export type KeycloakFlow = 'standard' | 'implicit' | 'hybrid';
 export type KeycloakPkceMethod = 'S256';
 
 export type CallbackStorage = {};
+
+export type CallbackState = {
+  state: string;
+
+  nonce: string;
+
+  pkceCodeVerifier?: string;
+
+  prompt?: string;
+
+  redirectUri?: string;
+};
+
+export type ClientOptions = {
+  action: string;
+
+  scope?: string;
+
+  responseMode: string;
+
+  responseType: string;
+
+  nonce?: string;
+
+  prompt?: string;
+
+  maxAge?: string;
+
+  loginHint?: string;
+
+  idpHint?: string;
+
+  locale?: string;
+
+  pkceChallenge?: string;
+
+  pkceMethod?: KeycloakPkceMethod;
+
+  redirectUri?: string;
+};
