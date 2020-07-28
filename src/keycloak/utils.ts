@@ -1,7 +1,14 @@
+import jwtDecode from 'jwt-decode';
 import type {
+  CallbackStorage,
+  ClientOptions,
+  KeycloakFlow,
   KeycloakPkceMethod,
+  KeycloakResponseMode,
+  KeycloakResponseType,
   IKeycloakReactNativeClientConfig,
 } from './types';
+import { extractQuerystringParameters } from 'src/utils/url';
 
 // TODO: Before createLoginUrl()
 // const state = createUUID();
@@ -32,7 +39,7 @@ interface ICreateLoginUrlOptions {
 
   state: string;
 
-  responseMode: string;
+  responseMode: KeycloakResponseMode;
 
   responseType: string;
 
@@ -232,5 +239,238 @@ export function setupOidcEndoints({
       }
       return oidcConfiguration.userinfo_endpoint;
     },
+  };
+}
+
+export function decodeToken(str: string) {
+  return jwtDecode(str);
+}
+
+interface ParseCallbackParams {
+  clientOptions: ClientOptions;
+
+  oauthState: CallbackStorage;
+
+  url: string;
+}
+
+export function parseCallback({
+  clientOptions,
+  oauthState,
+  url,
+}: ParseCallbackParams) {
+  const oauthParsed = parseCallbackUrl(url, clientOptions);
+  if (!oauthParsed) {
+    return;
+  }
+
+  return {
+    ...oauthParsed,
+    valid: true,
+    redirectUri: oauthState.redirectUri,
+    storedNonce: oauthState.nonce,
+    prompt: oauthState.prompt,
+    pkceCodeVerifier: oauthState.pkceCodeVerifier,
+  };
+}
+
+function parseCallbackUrl(url: string, clientOptions: ClientOptions) {
+  let supportedParams: string[] = [];
+  switch (clientOptions.flow) {
+    case 'standard':
+      supportedParams = ['code', 'state', 'session_state', 'kc_action_status'];
+      break;
+
+    case 'implicit':
+      supportedParams = [
+        'access_token',
+        'token_type',
+        'id_token',
+        'state',
+        'session_state',
+        'expires_in',
+        'kc_action_status',
+      ];
+      break;
+
+    case 'hybrid':
+      supportedParams = [
+        'access_token',
+        'id_token',
+        'code',
+        'state',
+        'session_state',
+        'kc_action_status',
+      ];
+      break;
+  }
+
+  supportedParams.push('error');
+  supportedParams.push('error_description');
+  supportedParams.push('error_uri');
+
+  const queryIndex = url.indexOf('?');
+  const fragmentIndex = url.indexOf('#');
+
+  let newUrl;
+  let parsed;
+
+  if (clientOptions.responseMode === 'query' && queryIndex !== -1) {
+    newUrl = url.substring(0, queryIndex);
+    parsed = parseCallbackParams(
+      url.substring(
+        queryIndex + 1,
+        fragmentIndex !== -1 ? fragmentIndex : url.length
+      ),
+      supportedParams
+    );
+    if (parsed.paramsString !== '') {
+      newUrl += '?' + parsed.paramsString;
+    }
+    if (fragmentIndex !== -1) {
+      newUrl += url.substring(fragmentIndex);
+    }
+  } else if (
+    clientOptions.responseMode === 'fragment' &&
+    fragmentIndex !== -1
+  ) {
+    newUrl = url.substring(0, fragmentIndex);
+    parsed = parseCallbackParams(
+      url.substring(fragmentIndex + 1),
+      supportedParams
+    );
+    if (parsed.paramsString !== '') {
+      newUrl += '#' + parsed.paramsString;
+    }
+  }
+
+  if (parsed && parsed.oauthParams) {
+    if (clientOptions.flow === 'standard' || clientOptions.flow === 'hybrid') {
+      if (
+        (parsed.oauthParams.code || parsed.oauthParams.error) &&
+        parsed.oauthParams.state
+      ) {
+        parsed.oauthParams.newUrl = newUrl;
+        return parsed.oauthParams;
+      }
+    } else if (clientOptions.flow === 'implicit') {
+      if (
+        (parsed.oauthParams.access_token || parsed.oauthParams.error) &&
+        parsed.oauthParams.state
+      ) {
+        parsed.oauthParams.newUrl = newUrl;
+        return parsed.oauthParams;
+      }
+    }
+  }
+
+  return {};
+}
+
+function parseCallbackParams(paramsString: string, supportedParams: string[]) {
+  const params = extractQuerystringParameters(paramsString);
+  const [otherParams, oAuthParams] = Object.keys(params).reduce(
+    ([oParams, oauthParams], key) => {
+      if (supportedParams.includes(key)) {
+        oauthParams.set(key, params[key]);
+      } else {
+        oParams.add(`${key}=${params[key]}`);
+      }
+      return [oParams, oauthParams];
+    },
+    [new Set<string>(), new Map<string, any>()]
+  );
+
+  return {
+    paramsString: Array.from(otherParams.values()).join('&'),
+    oauthParams: Object.fromEntries(oAuthParams.entries()),
+  };
+}
+
+export function validateInitOptions(initOptions?: any) {
+  let normalizedOptions: {
+    flow?: KeycloakFlow;
+    responseMode?: KeycloakResponseMode;
+    responseType?: KeycloakResponseType;
+    [key: string]: unknown;
+  } = {};
+
+  if (initOptions) {
+    if (typeof initOptions.useNonce !== 'undefined') {
+      normalizedOptions.useNonce = initOptions.useNonce;
+    }
+
+    if (initOptions.onLoad === 'login-required') {
+      normalizedOptions.loginRequired = true;
+    }
+
+    if (initOptions.responseMode) {
+      if (
+        initOptions.responseMode === 'query' ||
+        initOptions.responseMode === 'fragment'
+      ) {
+        normalizedOptions.responseMode = initOptions.responseMode;
+      } else {
+        throw 'Invalid value for responseMode';
+      }
+    }
+
+    if (initOptions.flow) {
+      switch (initOptions.flow) {
+        case 'standard':
+          normalizedOptions.responseType = 'code';
+          break;
+        case 'implicit':
+          normalizedOptions.responseType = 'id_token token';
+          break;
+        case 'hybrid':
+          normalizedOptions.responseType = 'code id_token token';
+          break;
+        default:
+          throw 'Invalid value for flow';
+      }
+
+      normalizedOptions.flow = initOptions.flow;
+    }
+
+    if (initOptions.timeSkew != null) {
+      normalizedOptions.timeSkew = initOptions.timeSkew;
+    }
+
+    if (initOptions.redirectUri) {
+      normalizedOptions.redirectUri = initOptions.redirectUri;
+    }
+
+    if (initOptions.silentCheckSsoRedirectUri) {
+      normalizedOptions.silentCheckSsoRedirectUri =
+        initOptions.silentCheckSsoRedirectUri;
+    }
+
+    if (typeof initOptions.silentCheckSsoFallback === 'boolean') {
+      normalizedOptions.silentCheckSsoFallback =
+        initOptions.silentCheckSsoFallback;
+    } else {
+      normalizedOptions.silentCheckSsoFallback = true;
+    }
+
+    if (initOptions.pkceMethod) {
+      if (initOptions.pkceMethod !== 'S256') {
+        throw 'Invalid value for pkceMethod';
+      }
+      normalizedOptions.pkceMethod = initOptions.pkceMethod;
+    }
+
+    if (typeof initOptions.enableLogging === 'boolean') {
+      normalizedOptions.enableLogging = initOptions.enableLogging;
+    } else {
+      normalizedOptions.enableLogging = false;
+    }
+  }
+
+  return {
+    ...normalizedOptions,
+    responseMode: normalizedOptions?.responseMode ?? 'fragment',
+    responseType: normalizedOptions?.responseType ?? 'code',
+    flow: !normalizedOptions.responseType ? 'standard' : normalizedOptions.flow,
   };
 }

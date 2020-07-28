@@ -11,7 +11,14 @@ import type {
   ClientOptions,
   IKeycloakReactNativeClientConfig,
 } from './types';
-import { createLoginUrl, createLogoutUrl, setupOidcEndoints } from './utils';
+import {
+  createAccountUrl,
+  createLoginUrl,
+  createLogoutUrl,
+  setupOidcEndoints,
+  createRegisterUrl,
+  parseCallback,
+} from './utils';
 
 class Adapter {
   private kcOptions: IKeycloakReactNativeClientConfig;
@@ -46,10 +53,7 @@ class Adapter {
     const state = createUUID();
     const nonce = createUUID();
     const redirectUri = this.redirectURI(this.clientOptions, this.kcOptions);
-    const endpoint =
-      this.clientOptions?.action === 'register'
-        ? this.endpoints.register()
-        : this.endpoints.authorize();
+    const endpoint = this.endpoints.authorize();
 
     let codeVerifier;
     let pkceChallenge;
@@ -70,7 +74,7 @@ class Adapter {
     };
 
     const loginURL = createLoginUrl({
-      action: this.clientOptions.action,
+      action: 'authorize',
       endpoint,
       scope: this.clientOptions.scope,
       clientId: this.kcOptions.clientId,
@@ -89,10 +93,23 @@ class Adapter {
     });
 
     if (await InAppBrowser.isAvailable()) {
-      const res = await InAppBrowser.open(loginURL, this.inAppBrowserOptions);
-      // TODO: Handle res!
+      // See for more details https://github.com/proyecto26/react-native-inappbrowser#authentication-flow-using-deep-linking
+      const res = await InAppBrowser.openAuth(
+        loginURL,
+        redirectUri,
+        this.inAppBrowserOptions
+      );
+      if (res.type === 'success' && res.url) {
+        return parseCallback({
+          url: res.url,
+          oauthState: callbackState,
+          clientOptions: this.clientOptions,
+        });
+      }
+
+      throw new Error('Authentication flow failed');
     } else {
-      throw new Error('Error. InAppBrowser not available');
+      throw new Error('InAppBrowser not available');
       // TODO: maybe!
       //   Linking.openURL(loginURL);
     }
@@ -123,9 +140,87 @@ class Adapter {
     });
   }
 
-  public register() {}
+  public async register() {
+    const state = createUUID();
+    const nonce = createUUID();
+    const redirectUri = this.redirectURI(this.clientOptions, this.kcOptions);
+    const endpoint = this.endpoints.register();
 
-  public accountManagement() {}
+    let codeVerifier;
+    let pkceChallenge;
+    if (this.clientOptions.pkceMethod) {
+      codeVerifier = generateCodeVerifier(96);
+      pkceChallenge = generatePkceChallenge(
+        this.clientOptions.pkceMethod,
+        codeVerifier
+      );
+    }
+
+    const callbackState: CallbackState = {
+      state,
+      nonce,
+      pkceCodeVerifier: codeVerifier,
+      prompt: this.clientOptions?.prompt ?? undefined,
+      redirectUri: redirectUri ? encodeURIComponent(redirectUri) : undefined,
+    };
+
+    const registerUrl = createRegisterUrl({
+      action: 'register',
+      endpoint,
+      scope: this.clientOptions.scope,
+      clientId: this.kcOptions.clientId,
+      state,
+      responseMode: this.clientOptions.responseMode,
+      responseType: this.clientOptions.responseType,
+      nonce,
+      prompt: this.clientOptions.prompt,
+      maxAge: this.clientOptions.maxAge,
+      loginHint: this.clientOptions.loginHint,
+      idpHint: this.clientOptions.idpHint,
+      locale: this.clientOptions.locale,
+      pkceChallenge,
+      pkceMethod: this.clientOptions.pkceMethod,
+      redirectUri,
+    });
+
+    if (await InAppBrowser.isAvailable()) {
+      // See for more details https://github.com/proyecto26/react-native-inappbrowser#authentication-flow-using-deep-linking
+      const res = await InAppBrowser.openAuth(
+        registerUrl,
+        redirectUri,
+        this.inAppBrowserOptions
+      );
+
+      // TODO: Handle res!
+      if (res.type === 'success' && res.url) {
+        return parseCallback({
+          url: res.url,
+          oauthState: callbackState,
+          clientOptions: this.clientOptions,
+        });
+      }
+
+      throw new Error('Authentication flow failed');
+    } else {
+      throw new Error('Error. InAppBrowser not available');
+      // TODO: maybe!
+      //   Linking.openURL(loginURL);
+    }
+  }
+
+  public accountManagement() {
+    const redirectUri = this.redirectURI(this.clientOptions, this.kcOptions);
+    const accountUrl = createAccountUrl({
+      clientConfig: this.kcOptions,
+      redirectUri,
+    });
+
+    if (typeof accountUrl !== 'undefined') {
+      InAppBrowser.open(accountUrl, this.inAppBrowserOptions);
+    } else {
+      throw 'Not supported by the OIDC server';
+    }
+  }
 
   public redirectURI(
     options: ClientOptions,

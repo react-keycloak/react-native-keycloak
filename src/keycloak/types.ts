@@ -16,15 +16,29 @@ export interface IKeycloakReactNativeClientConfig {
 }
 
 export type KeycloakOnLoad = 'login-required' | 'check-sso';
+
 export type KeycloakResponseMode = 'query' | 'fragment';
+
 export type KeycloakResponseType =
   | 'code'
   | 'id_token token'
   | 'code id_token token';
+
 export type KeycloakFlow = 'standard' | 'implicit' | 'hybrid';
+
 export type KeycloakPkceMethod = 'S256';
 
-export type CallbackStorage = {};
+export type CallbackStorage = {
+  nonce?: string;
+
+  pkceCodeVerifier?: string;
+
+  prompt?: string;
+
+  redirectUri?: string;
+
+  state: string;
+};
 
 export type CallbackState = {
   state: string;
@@ -39,13 +53,11 @@ export type CallbackState = {
 };
 
 export type ClientOptions = {
-  action: string;
+  flow?: KeycloakFlow;
 
   scope?: string;
 
-  responseMode: string;
-
-  responseType: string;
+  responseType: KeycloakResponseType;
 
   nonce?: string;
 
@@ -64,4 +76,6 @@ export type ClientOptions = {
   pkceMethod?: KeycloakPkceMethod;
 
   redirectUri?: string;
+
+  responseMode: KeycloakResponseMode;
 };
