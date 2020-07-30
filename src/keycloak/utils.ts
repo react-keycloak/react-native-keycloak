@@ -1,14 +1,22 @@
 import jwtDecode from 'jwt-decode';
 import type {
   CallbackStorage,
-  ClientOptions,
+  ClientInitOptions,
   KeycloakFlow,
-  KeycloakPkceMethod,
   KeycloakResponseMode,
   KeycloakResponseType,
   IKeycloakReactNativeClientConfig,
+  KeycloakLoginOptions,
+  KeycloakAdapter,
+  KeycloakEndpoints,
+  CallbackState,
 } from './types';
 import { extractQuerystringParameters } from 'src/utils/url';
+import {
+  generateCodeVerifier,
+  generatePkceChallenge,
+  createUUID,
+} from 'src/utils/uuid';
 
 // TODO: Before createLoginUrl()
 // const state = createUUID();
@@ -26,40 +34,6 @@ import { extractQuerystringParameters } from 'src/utils/url';
 //   redirectUri: encodeURIComponent(redirectUri),
 // };
 
-interface ICreateLoginUrlOptions {
-  action: string;
-
-  endpoint: string;
-
-  scope?: string;
-
-  clientId: string;
-
-  redirectUri: string;
-
-  state: string;
-
-  responseMode: KeycloakResponseMode;
-
-  responseType: string;
-
-  nonce?: string;
-
-  prompt?: string;
-
-  maxAge?: string;
-
-  loginHint?: string;
-
-  idpHint?: string;
-
-  locale?: string;
-
-  pkceChallenge?: string;
-
-  pkceMethod?: KeycloakPkceMethod;
-}
-
 interface ICreateLogoutUrlOptions {
   endpoint: string;
 
@@ -71,8 +45,31 @@ interface ICreateAccountUrlOptions {
   redirectUri: string;
 }
 
-export function createLoginUrl(options: ICreateLoginUrlOptions): string {
-  const baseUrl = options.endpoint;
+export function createLoginUrl(
+  adapter: KeycloakAdapter,
+  endpoints: KeycloakEndpoints,
+  kcOptions: IKeycloakReactNativeClientConfig,
+  initOptions: ClientInitOptions,
+  options: KeycloakLoginOptions
+): [string, CallbackState] {
+  const state = createUUID();
+  const nonce = createUUID();
+  const redirectUri = adapter.redirectUri(options);
+
+  let codeVerifier;
+  let pkceChallenge;
+  if (initOptions.pkceMethod) {
+    codeVerifier = generateCodeVerifier(96);
+    pkceChallenge = generatePkceChallenge(initOptions.pkceMethod, codeVerifier);
+  }
+
+  const callbackState: CallbackState = {
+    state,
+    nonce,
+    pkceCodeVerifier: codeVerifier,
+    prompt: options?.prompt ?? undefined,
+    redirectUri: redirectUri ? encodeURIComponent(redirectUri) : undefined,
+  };
 
   let scope;
   if (options?.scope) {
@@ -85,55 +82,53 @@ export function createLoginUrl(options: ICreateLoginUrlOptions): string {
     scope = 'openid';
   }
 
-  let url =
-    baseUrl +
-    '?client_id=' +
-    encodeURIComponent(options.clientId) +
-    '&redirect_uri=' +
-    encodeURIComponent(options.redirectUri) +
-    '&state=' +
-    encodeURIComponent(options.state) +
-    '&response_mode=' +
-    encodeURIComponent(options.responseMode) +
-    '&response_type=' +
-    encodeURIComponent(options.responseType) +
-    '&scope=' +
-    encodeURIComponent(scope);
+  const baseUrl =
+    options && options.action === 'register'
+      ? endpoints.register()
+      : endpoints.authorize();
 
-  if (options?.nonce) {
-    url = url + '&nonce=' + encodeURIComponent(options?.nonce);
+  const params = new URLSearchParams();
+  params.set('client_id', kcOptions.clientId);
+  params.set('redirect_uri', redirectUri);
+  params.set('state', state);
+  params.set('response_mode', initOptions.responseMode);
+  params.set('response_type', initOptions.responseType);
+  params.set('scope', scope);
+
+  if (initOptions?.nonce) {
+    params.set(nonce, initOptions.nonce);
   }
 
   if (options?.prompt) {
-    url += '&prompt=' + encodeURIComponent(options.prompt);
+    params.set('prompt', options.prompt);
   }
 
   if (options?.maxAge) {
-    url += '&max_age=' + encodeURIComponent(options.maxAge);
+    params.set('max_age', `${options.maxAge}`);
   }
 
   if (options?.loginHint) {
-    url += '&login_hint=' + encodeURIComponent(options.loginHint);
+    params.set('login_hint', options.loginHint);
   }
 
   if (options?.idpHint) {
-    url += '&kc_idp_hint=' + encodeURIComponent(options.idpHint);
+    params.set('kc_idp_hint', options.idpHint);
   }
 
   if (options?.action && options?.action !== 'register') {
-    url += '&kc_action=' + encodeURIComponent(options.action);
+    params.set('kc_action', options.action);
   }
 
   if (options?.locale) {
-    url += '&ui_locales=' + encodeURIComponent(options.locale);
+    params.set('ui_locales', options.locale);
   }
 
-  if (options?.pkceMethod && options?.pkceChallenge) {
-    url += '&code_challenge=' + options.pkceChallenge;
-    url += '&code_challenge_method=' + options.pkceMethod;
+  if (initOptions?.pkceMethod && !!pkceChallenge) {
+    params.set('code_challenge', pkceChallenge);
+    params.set('code_challenge_method', initOptions.pkceMethod);
   }
 
-  return url;
+  return [`${baseUrl}?${params.toString()}`, callbackState];
 }
 
 export function createLogoutUrl(options: ICreateLogoutUrlOptions) {
@@ -142,8 +137,14 @@ export function createLogoutUrl(options: ICreateLogoutUrlOptions) {
   )}`;
 }
 
-export function createRegisterUrl(options: ICreateLoginUrlOptions) {
-  return createLoginUrl({
+export function createRegisterUrl(
+  adapter: KeycloakAdapter,
+  endpoints: KeycloakEndpoints,
+  kcOptions: IKeycloakReactNativeClientConfig,
+  initOptions: ClientInitOptions,
+  options: KeycloakLoginOptions
+) {
+  return createLoginUrl(adapter, endpoints, kcOptions, initOptions, {
     ...options,
     action: 'register',
   });
@@ -247,7 +248,7 @@ export function decodeToken(str: string) {
 }
 
 interface ParseCallbackParams {
-  clientOptions: ClientOptions;
+  clientOptions: ClientInitOptions;
 
   oauthState: CallbackStorage;
 
@@ -274,7 +275,7 @@ export function parseCallback({
   };
 }
 
-function parseCallbackUrl(url: string, clientOptions: ClientOptions) {
+function parseCallbackUrl(url: string, clientOptions: ClientInitOptions) {
   let supportedParams: string[] = [];
   switch (clientOptions.flow) {
     case 'standard':
