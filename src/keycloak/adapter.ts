@@ -15,6 +15,7 @@ import type {
   KeycloakLogoutOptions,
   KeycloakRegisterOptions,
   KeycloakEndpoints,
+  KeycloakProfile,
 } from './types';
 import {
   createAccountUrl,
@@ -23,6 +24,7 @@ import {
   setupOidcEndoints,
   createRegisterUrl,
   parseCallback,
+  getRealmUrl,
 } from './utils';
 
 class Adapter implements KeycloakAdapter {
@@ -194,6 +196,27 @@ class Adapter implements KeycloakAdapter {
       return this.kcOptions.redirectUri;
     }
     return ''; // TODO: Get main DeepLink redirect for app
+  }
+
+  public async loadUserProfile(token: string): Promise<KeycloakProfile> {
+    const { realm, url } = this.kcOptions;
+    const profileUrl = getRealmUrl(realm, url) + '/account';
+
+    try {
+      const response = await fetch(profileUrl, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const responseText = await response.text();
+
+      return JSON.parse(responseText);
+    } catch (error) {
+      throw error;
+    }
   }
 }
 

@@ -164,3 +164,64 @@ export interface KeycloakAdapter {
 export interface KeycloakEndpoints {
   [key: string]: () => string;
 }
+
+export interface KeycloakProfile {
+  id?: string;
+
+  username?: string;
+
+  email?: string;
+
+  firstName?: string;
+
+  lastName?: string;
+
+  enabled?: boolean;
+
+  emailVerified?: boolean;
+
+  totp?: boolean;
+
+  createdTimestamp?: number;
+}
+
+export interface KeycloakTokenParsed {
+  exp?: number;
+
+  iat?: number;
+
+  nonce?: string;
+
+  sub?: string;
+
+  session_state?: string;
+
+  realm_access?: KeycloakRoles;
+
+  resource_access?: KeycloakResourceAccess;
+}
+
+export interface KeycloakResourceAccess {
+  [key: string]: KeycloakRoles;
+}
+
+export interface KeycloakRoles {
+  roles: string[];
+}
+
+export interface KeycloakError {
+  error: string;
+  error_description: string;
+}
+
+export interface KeycloakProfile {
+  id?: string;
+  username?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  enabled?: boolean;
+  emailVerified?: boolean;
+  totp?: boolean;
+  createdTimestamp?: number;
+}

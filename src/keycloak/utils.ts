@@ -165,7 +165,7 @@ export function createAccountUrl({
   )}&referrer_uri=${encodeURIComponent(redirectUri)}`;
 }
 
-function getRealmUrl(realm: string, authServerUrl?: string) {
+export function getRealmUrl(realm: string, authServerUrl?: string) {
   if (typeof authServerUrl === 'undefined') {
     return undefined;
   }
@@ -243,8 +243,8 @@ export function setupOidcEndoints({
   };
 }
 
-export function decodeToken(str: string) {
-  return jwtDecode(str);
+export function decodeToken<T = unknown>(str: string) {
+  return jwtDecode<T>(str);
 }
 
 interface ParseCallbackParams {
