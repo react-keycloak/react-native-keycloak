@@ -1,83 +1,45 @@
 import InAppBrowser from 'react-native-inappbrowser-reborn';
 import type { InAppBrowserOptions } from 'react-native-inappbrowser-reborn';
-import {
-  createUUID,
-  generateCodeVerifier,
-  generatePkceChallenge,
-} from 'src/utils/uuid';
 
 import type {
-  CallbackState,
-  ClientInitOptions,
-  IKeycloakReactNativeClientConfig,
+  CallbackStorage,
   KeycloakAdapter,
+  KeycloakInstance,
   KeycloakLoginOptions,
   KeycloakLogoutOptions,
   KeycloakRegisterOptions,
-  KeycloakEndpoints,
   KeycloakProfile,
 } from './types';
-import {
-  createAccountUrl,
-  createLoginUrl,
-  createLogoutUrl,
-  setupOidcEndoints,
-  createRegisterUrl,
-  parseCallback,
-  getRealmUrl,
-} from './utils';
+
+import { getRealmUrl } from './utils';
 
 class Adapter implements KeycloakAdapter {
-  private kcOptions: IKeycloakReactNativeClientConfig;
-
-  private clientOptions: ClientInitOptions;
-
-  private oidcConfig?: { [key: string]: any };
-
-  private inAppBrowserOptions?: InAppBrowserOptions;
-
-  private endpoints: KeycloakEndpoints;
-
   constructor(
-    keycloakOptions: IKeycloakReactNativeClientConfig,
-    clientOptions: ClientInitOptions,
-    inAppBrowserOptions?: InAppBrowserOptions,
-    oidcConfiguration?: { [key: string]: any }
-  ) {
-    this.kcOptions = keycloakOptions;
-    this.clientOptions = clientOptions;
-    this.inAppBrowserOptions = inAppBrowserOptions;
-    this.oidcConfig = oidcConfiguration;
+    private kcClient: KeycloakInstance,
+    private inAppBrowserOptions?: InAppBrowserOptions
+  ) {}
 
-    this.endpoints = setupOidcEndoints({
-      realm: this.kcOptions.realm,
-      authServerUrl: this.kcOptions.url,
-      oidcConfiguration: this.oidcConfig,
-    });
-  }
-
-  public async login(options: KeycloakLoginOptions) {
-    const [loginURL, callbackState] = createLoginUrl(
-      this,
-      this.endpoints,
-      this.kcOptions,
-      this.clientOptions,
-      options
-    );
+  /**
+   * Start login process
+   *
+   * @param {KeycloakLoginOptions} options Login options
+   */
+  public async login(options?: KeycloakLoginOptions): Promise<void> {
+    var loginUrl = this.kcClient.createLoginUrl(options);
 
     if (await InAppBrowser.isAvailable()) {
       // See for more details https://github.com/proyecto26/react-native-inappbrowser#authentication-flow-using-deep-linking
       const res = await InAppBrowser.openAuth(
-        loginURL,
-        options.redirectUri,
+        loginUrl,
+        this.kcClient.redirectUri!,
         this.inAppBrowserOptions
       );
+
       if (res.type === 'success' && res.url) {
-        parseCallback({
-          url: res.url,
-          oauthState: callbackState,
-          clientOptions: this.clientOptions,
-        });
+        const oauth = this.kcClient.parseCallback(res.url);
+
+        // TODO: WIP implement processCallback inside Client
+        return processCallback(oauth);
       }
 
       throw new Error('Authentication flow failed');
@@ -88,9 +50,9 @@ class Adapter implements KeycloakAdapter {
     }
   }
 
-  public async logout(options: KeycloakLogoutOptions) {
+  public async logout(options?: KeycloakLogoutOptions): Promise<void> {
     const endpoint = this.endpoints.logout();
-    const redirectUri = this.redirectUri(options.redirectUri);
+    const redirectUri = this.redirectUri(options);
     const logoutUrl = createLogoutUrl({ endpoint, redirectUri });
 
     const data = new FormData();
@@ -107,79 +69,48 @@ class Adapter implements KeycloakAdapter {
     });
   }
 
-  public async register(options: KeycloakRegisterOptions) {
-    const state = createUUID();
-    const nonce = createUUID();
-    const redirectUri = this.redirectUri(options.redirectUri, undefined);
-    const endpoint = this.endpoints.register();
-
-    let codeVerifier;
-    let pkceChallenge;
-    if (this.clientOptions.pkceMethod) {
-      codeVerifier = generateCodeVerifier(96);
-      pkceChallenge = generatePkceChallenge(
-        this.clientOptions.pkceMethod,
-        codeVerifier
-      );
-    }
-
-    const callbackState: CallbackState = {
-      state,
-      nonce,
-      pkceCodeVerifier: codeVerifier,
-      prompt: this.clientOptions?.prompt ?? undefined,
-      redirectUri: redirectUri ? encodeURIComponent(redirectUri) : undefined,
-    };
-
-    const registerUrl = createRegisterUrl({
-      action: 'register',
-      endpoint,
-      scope: this.clientOptions.scope,
-      clientId: this.kcOptions.clientId,
-      state,
-      responseMode: this.clientOptions.responseMode,
-      responseType: this.clientOptions.responseType,
-      nonce,
-      prompt: this.clientOptions.prompt,
-      maxAge: this.clientOptions.maxAge,
-      loginHint: this.clientOptions.loginHint,
-      idpHint: this.clientOptions.idpHint,
-      locale: this.clientOptions.locale,
-      pkceChallenge,
-      pkceMethod: this.clientOptions.pkceMethod,
-      redirectUri,
-    });
-
-    if (await InAppBrowser.isAvailable()) {
-      // See for more details https://github.com/proyecto26/react-native-inappbrowser#authentication-flow-using-deep-linking
-      const res = await InAppBrowser.openAuth(
-        registerUrl,
-        redirectUri,
-        this.inAppBrowserOptions
-      );
-
-      // TODO: Handle res!
-      if (res.type === 'success' && res.url) {
-        parseCallback({
-          url: res.url,
-          oauthState: callbackState,
-          clientOptions: this.clientOptions,
-        });
-      }
-
-      throw new Error('Authentication flow failed');
-    } else {
-      throw new Error('Error. InAppBrowser not available');
-      // TODO: maybe!
-      //   Linking.openURL(loginURL);
-    }
+  public async register(options?: KeycloakRegisterOptions) {
+    // const [registerURL, callbackState] = createLoginUrl(
+    //   this,
+    //   this.endpoints,
+    //   this.kcOptions,
+    //   this.clientOptions,
+    //   options
+    // );
+    // if (!options.redirectUri) {
+    //   throw new Error('redirectUri not specified');
+    // }
+    // if (await InAppBrowser.isAvailable()) {
+    //   // See for more details https://github.com/proyecto26/react-native-inappbrowser#authentication-flow-using-deep-linking
+    //   const res = await InAppBrowser.openAuth(
+    //     registerURL,
+    //     options.redirectUri,
+    //     this.inAppBrowserOptions
+    //   );
+    //   // TODO: Handle res!
+    //   if (res.type === 'success' && res.url) {
+    //     parseCallback({
+    //       url: res.url,
+    //       oauthState: callbackState,
+    //       clientOptions: this.clientOptions,
+    //     });
+    //   }
+    //   throw new Error('Authentication flow failed');
+    // } else {
+    //   throw new Error('Error. InAppBrowser not available');
+    //   // TODO: maybe!
+    //   //   Linking.openURL(loginURL);
+    // }
   }
 
   public async accountManagement() {
-    const redirectUri = this.redirectUri(options);
+    if (!this.kcOptions.redirectUri) {
+      throw new Error('redirectUri not specified');
+    }
+
     const accountUrl = createAccountUrl({
       clientConfig: this.kcOptions,
-      redirectUri,
+      redirectUri: this.kcOptions.redirectUri,
     });
 
     if (typeof accountUrl !== 'undefined') {
@@ -189,7 +120,10 @@ class Adapter implements KeycloakAdapter {
     }
   }
 
-  public redirectUri(options?: { redirectUri?: string }): string {
+  public redirectUri(
+    options?: { redirectUri?: string },
+    _encodeHash: boolean = true
+  ): string {
     if (options && options.redirectUri) {
       return options.redirectUri;
     } else if (this.kcOptions.redirectUri) {
