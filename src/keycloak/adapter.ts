@@ -2,7 +2,6 @@ import InAppBrowser from 'react-native-inappbrowser-reborn';
 import type { InAppBrowserOptions } from 'react-native-inappbrowser-reborn';
 
 import type {
-  CallbackStorage,
   KeycloakAdapter,
   KeycloakInstance,
   KeycloakLoginOptions,
