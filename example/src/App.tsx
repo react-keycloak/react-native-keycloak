@@ -11,7 +11,12 @@ const keycloak = new RNKeycloak({
 
 export default function App() {
   return (
-    <ReactNativeKeycloakProvider authClient={keycloak}>
+    <ReactNativeKeycloakProvider
+      authClient={keycloak}
+      initOptions={{
+        onLoad: 'login-required',
+      }}
+    >
       <View style={styles.container}>
         <Text>Welcome!</Text>
       </View>

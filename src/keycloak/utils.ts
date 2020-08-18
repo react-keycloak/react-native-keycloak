@@ -1,6 +1,6 @@
 import jwtDecode from 'jwt-decode';
 
-import { extractQuerystringParameters } from 'src/utils/url';
+import { extractQuerystringParameters } from '../utils/url';
 
 import type {
   CallbackStorage,
