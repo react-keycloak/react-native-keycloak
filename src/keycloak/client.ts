@@ -30,6 +30,7 @@ import type {
   KeycloakRoles,
   KeycloakTokenParsed,
   OIDCProviderConfig,
+  OAuthResponse,
 } from './types';
 
 import {
@@ -160,7 +161,12 @@ class KeycloakReactNativeClient implements KeycloakInstance {
   /**
    * @private Undocumented.
    */
-  tokenTimeoutHandle?: number | null;
+  tokenTimeoutHandle?: NodeJS.Timeout | null;
+
+  /**
+   * @private Undocumented.
+   */
+  endpoints?: KeycloakEndpoints;
 
   /**
    * @private Undocumented.
@@ -176,8 +182,6 @@ class KeycloakReactNativeClient implements KeycloakInstance {
   private refreshTokenPromise?: Promise<boolean>;
 
   private callbackStorage: CallbackStorage = this.createCallbackStorage();
-
-  private endpoints?: KeycloakEndpoints;
 
   /**
    * Adds a [cryptographic nonce](https://en.wikipedia.org/wiki/Cryptographic_nonce)
@@ -207,11 +211,7 @@ class KeycloakReactNativeClient implements KeycloakInstance {
 
     this.callbackStorage = this.createCallbackStorage();
 
-    this.adapter = new Adapter(
-      this,
-      this.callbackStorage,
-      this.clientConfig.inAppBrowserOptions
-    );
+    this.adapter = new Adapter(this, this.clientConfig.inAppBrowserOptions);
 
     if (initOptions) {
       if (typeof initOptions.useNonce !== 'undefined') {
@@ -422,7 +422,7 @@ class KeycloakReactNativeClient implements KeycloakInstance {
    */
   public createLogoutUrl(options?: KeycloakLogoutOptions): string {
     const params = new URLSearchParams();
-    params.set('redirect_uri', this.adapter!.redirectUri(options, false));
+    params.set('redirect_uri', this.adapter!.redirectUri(options));
 
     return `${this.endpoints!.logout()}?${params.toString()}`;
   }
@@ -705,10 +705,119 @@ class KeycloakReactNativeClient implements KeycloakInstance {
   /**
    * @private Undocumented.
    */
-  parseCallback(url: string) {
+  async processCallback(oauth: OAuthResponse) {
+    const timeLocal = new Date().getTime();
+
+    if (oauth.kc_action_status) {
+      this.onActionUpdate && this.onActionUpdate(oauth.kc_action_status);
+    }
+
+    const { code, error, prompt } = oauth;
+
+    if (error) {
+      if (prompt !== 'none') {
+        this.onAuthError &&
+          this.onAuthError({
+            error,
+            error_description: oauth.error_description ?? 'auth error',
+          });
+
+        throw new Error(oauth.error_description);
+      }
+
+      return;
+    }
+
+    if (this.flow !== 'standard' && (oauth.access_token || oauth.id_token)) {
+      return this.authSuccess(oauth, timeLocal, true);
+    }
+
+    if (this.flow !== 'implicit' && code) {
+      const params = new URLSearchParams();
+      params.set('code', code);
+      params.set('grant_type', 'authorization_code');
+      params.set('client_id', this.clientId!);
+      params.set('redirect_uri', oauth.redirectUri!);
+      if (oauth.pkceCodeVerifier) {
+        params.set('code_verifier', oauth.pkceCodeVerifier);
+      }
+
+      const tokenUrl = this.endpoints!.token();
+      try {
+        const tokenRes = await fetch(tokenUrl, {
+          method: 'POST',
+          headers: {
+            'Content-type': 'application/x-www-form-urlencoded',
+          },
+          body: params,
+        });
+
+        const tokenResponse = await tokenRes.json();
+
+        await this.authSuccess(
+          {
+            ...oauth,
+            access_token: tokenResponse.access_token,
+            refresh_token: tokenResponse.refresh_token,
+            id_token: tokenResponse.id_token,
+          },
+          timeLocal,
+          this.flow === 'standard'
+        );
+      } catch (err) {
+        // Notify onAuthError event handler if set
+        this.onAuthError &&
+          this.onAuthError({
+            error: err,
+            error_description:
+              'Failed to refresh token during callback processing',
+          });
+
+        throw new Error(err);
+      }
+    }
+  }
+
+  private async authSuccess(
+    oauthObj: OAuthResponse,
+    timeLocal: number,
+    fulfillPromise: boolean
+  ) {
+    timeLocal = (timeLocal + new Date().getTime()) / 2;
+
+    this.setToken(
+      oauthObj.access_token ?? null,
+      oauthObj.refresh_token ?? null,
+      oauthObj.id_token ?? null,
+      timeLocal
+    );
+
+    if (
+      this.useNonce &&
+      ((this.tokenParsed && this.tokenParsed.nonce !== oauthObj.storedNonce) ||
+        (this.refreshTokenParsed &&
+          this.refreshTokenParsed.nonce !== oauthObj.storedNonce) ||
+        (this.idTokenParsed &&
+          this.idTokenParsed.nonce !== oauthObj.storedNonce))
+    ) {
+      this.logInfo('[KEYCLOAK] Invalid nonce, clearing token');
+      this.clearToken();
+
+      throw new Error('invalid nonce, token cleared');
+    }
+
+    if (fulfillPromise) {
+      this.onAuthSuccess && this.onAuthSuccess();
+    }
+  }
+
+  /**
+   * @private Undocumented.
+   */
+  parseCallback(url: string): OAuthResponse {
     const oauthParsed = this.parseCallbackUrl(url);
     if (!oauthParsed) {
-      return;
+      throw new Error('Failed to parse redirect URL');
     }
 
     const oauthState = this.callbackStorage.get(oauthParsed.state);
@@ -724,7 +833,7 @@ class KeycloakReactNativeClient implements KeycloakInstance {
       };
     }
 
-    return oauthParsed;
+    return oauthParsed as OAuthResponse;
   }
 
   private async processInit(initOptions?: KeycloakInitOptions): Promise<void> {
@@ -733,7 +842,7 @@ class KeycloakReactNativeClient implements KeycloakInstance {
         this.setToken(
           initOptions.token,
           initOptions.refreshToken,
-          initOptions.idToken
+          initOptions.idToken ?? null
         );
 
         try {
@@ -1036,7 +1145,7 @@ class KeycloakReactNativeClient implements KeycloakInstance {
           (parsed.oauthParams.code || parsed.oauthParams.error) &&
           parsed.oauthParams.state
         ) {
-          parsed.oauthParams.newUrl = newUrl;
+          parsed.oauthParams.newUrl = newUrl!;
           return parsed.oauthParams;
         }
       } else if (this.flow === 'implicit') {
@@ -1044,7 +1153,7 @@ class KeycloakReactNativeClient implements KeycloakInstance {
           (parsed.oauthParams.access_token || parsed.oauthParams.error) &&
           parsed.oauthParams.state
         ) {
-          parsed.oauthParams.newUrl = newUrl;
+          parsed.oauthParams.newUrl = newUrl!;
           return parsed.oauthParams;
         }
       }

@@ -7,10 +7,7 @@ import type {
   KeycloakLoginOptions,
   KeycloakLogoutOptions,
   KeycloakRegisterOptions,
-  KeycloakProfile,
 } from './types';
-
-import { getRealmUrl } from './utils';
 
 class Adapter implements KeycloakAdapter {
   constructor(
@@ -36,9 +33,7 @@ class Adapter implements KeycloakAdapter {
 
       if (res.type === 'success' && res.url) {
         const oauth = this.kcClient.parseCallback(res.url);
-
-        // TODO: WIP implement processCallback inside Client
-        return processCallback(oauth);
+        return this.kcClient.processCallback(oauth);
       }
 
       throw new Error('Authentication flow failed');
@@ -50,67 +45,50 @@ class Adapter implements KeycloakAdapter {
   }
 
   public async logout(options?: KeycloakLogoutOptions): Promise<void> {
-    const endpoint = this.endpoints.logout();
-    const redirectUri = this.redirectUri(options);
-    const logoutUrl = createLogoutUrl({ endpoint, redirectUri });
+    const logoutUrl = this.kcClient.createLogoutUrl(options);
 
     const data = new FormData();
-    data.append('client_id', this.kcOptions.clientId);
-    data.append('refresh_token', refreshToken);
+    data.append('client_id', this.kcClient.clientId);
+    data.append('refresh_token', this.kcClient.refreshToken);
 
     await fetch(logoutUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${this.kcClient.token}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: data,
     });
+
+    this.kcClient.clearToken();
   }
 
   public async register(options?: KeycloakRegisterOptions) {
-    // const [registerURL, callbackState] = createLoginUrl(
-    //   this,
-    //   this.endpoints,
-    //   this.kcOptions,
-    //   this.clientOptions,
-    //   options
-    // );
-    // if (!options.redirectUri) {
-    //   throw new Error('redirectUri not specified');
-    // }
-    // if (await InAppBrowser.isAvailable()) {
-    //   // See for more details https://github.com/proyecto26/react-native-inappbrowser#authentication-flow-using-deep-linking
-    //   const res = await InAppBrowser.openAuth(
-    //     registerURL,
-    //     options.redirectUri,
-    //     this.inAppBrowserOptions
-    //   );
-    //   // TODO: Handle res!
-    //   if (res.type === 'success' && res.url) {
-    //     parseCallback({
-    //       url: res.url,
-    //       oauthState: callbackState,
-    //       clientOptions: this.clientOptions,
-    //     });
-    //   }
-    //   throw new Error('Authentication flow failed');
-    // } else {
-    //   throw new Error('Error. InAppBrowser not available');
-    //   // TODO: maybe!
-    //   //   Linking.openURL(loginURL);
-    // }
+    const registerUrl = this.kcClient.createRegisterUrl(options);
+
+    if (await InAppBrowser.isAvailable()) {
+      // See for more details https://github.com/proyecto26/react-native-inappbrowser#authentication-flow-using-deep-linking
+      const res = await InAppBrowser.openAuth(
+        registerUrl,
+        this.kcClient.redirectUri!,
+        this.inAppBrowserOptions
+      );
+
+      if (res.type === 'success' && res.url) {
+        const oauth = this.kcClient.parseCallback(res.url);
+        return this.kcClient.processCallback(oauth);
+      }
+
+      throw new Error('Registration flow failed');
+    } else {
+      throw new Error('InAppBrowser not available');
+      // TODO: maybe!
+      //   Linking.openURL(loginURL);
+    }
   }
 
   public async accountManagement() {
-    if (!this.kcOptions.redirectUri) {
-      throw new Error('redirectUri not specified');
-    }
-
-    const accountUrl = createAccountUrl({
-      clientConfig: this.kcOptions,
-      redirectUri: this.kcOptions.redirectUri,
-    });
+    const accountUrl = this.kcClient.createAccountUrl();
 
     if (typeof accountUrl !== 'undefined') {
       await InAppBrowser.open(accountUrl, this.inAppBrowserOptions);
@@ -119,37 +97,16 @@ class Adapter implements KeycloakAdapter {
     }
   }
 
-  public redirectUri(
-    options?: { redirectUri?: string },
-    _encodeHash: boolean = true
-  ): string {
+  public redirectUri(options?: { redirectUri?: string }): string {
     if (options && options.redirectUri) {
       return options.redirectUri;
-    } else if (this.kcOptions.redirectUri) {
-      return this.kcOptions.redirectUri;
     }
-    return ''; // TODO: Get main DeepLink redirect for app
-  }
 
-  public async loadUserProfile(token: string): Promise<KeycloakProfile> {
-    const { realm, url } = this.kcOptions;
-    const profileUrl = getRealmUrl(realm, url) + '/account';
-
-    try {
-      const response = await fetch(profileUrl, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const responseText = await response.text();
-
-      return JSON.parse(responseText);
-    } catch (error) {
-      throw error;
+    if (this.kcClient.redirectUri) {
+      return this.kcClient.redirectUri;
     }
+
+    return ''; // TODO: Retrieve app deeplink
   }
 }
 

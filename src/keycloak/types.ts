@@ -344,6 +344,32 @@ export interface KeycloakJSON {
   resource?: string;
 }
 
+export interface OAuthResponse {
+  valid: boolean;
+
+  code?: string;
+
+  error?: string;
+
+  prompt?: string;
+
+  kc_action_status?: 'success' | 'cancelled' | 'error';
+
+  error_description?: string;
+
+  access_token?: string;
+
+  id_token?: string;
+
+  pkceCodeVerifier?: string;
+
+  redirectUri?: string;
+
+  refresh_token?: string;
+
+  storedNonce?: string;
+}
+
 /**
  * A client for the Keycloak authentication server.
  * @see {@link https://keycloak.gitbooks.io/securing-client-applications-guide/content/topics/oidc/javascript-adapter.html|Keycloak JS adapter documentation}
@@ -468,6 +494,11 @@ export interface KeycloakInstance {
    * @private Undocumented.
    */
   userInfo?: {}; // KeycloakUserInfo;
+
+  /**
+   * @private Undocumented.
+   */
+  endpoints?: KeycloakEndpoints;
 
   /**
    * Called when the adapter is initialized.
@@ -628,5 +659,10 @@ export interface KeycloakInstance {
   /**
    * @private Undocumented.
    */
-  parseCallback(url: string): {};
+  processCallback(oauth: OAuthResponse): Promise<void>;
+
+  /**
+   * @private Undocumented.
+   */
+  parseCallback(url: string): OAuthResponse;
 }

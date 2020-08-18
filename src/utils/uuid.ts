@@ -1,5 +1,6 @@
+/* eslint-disable no-useless-escape */
 import { sha256 } from 'js-sha256';
-import { fromByteArray } from './base64';
+import { fromByteArray } from 'base64-js';
 
 function generateRandomString(len: number, alphabet: string) {
   const randomData = generateRandomData(len);
@@ -44,9 +45,9 @@ export function generatePkceChallenge(
     // The use of the "plain" method is considered insecure and therefore not supported.
     case 'S256':
       // hash codeVerifier, then encode as url-safe base64 without padding
-      var hashBytes = sha256.arrayBuffer(codeVerifier);
+      const hashBytes = sha256.arrayBuffer(codeVerifier);
       // new Uint8Array(sha256_imported.arrayBuffer(codeVerifier));
-      var encodedHash = fromByteArray(hashBytes)
+      const encodedHash = fromByteArray(hashBytes as Uint8Array)
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/\=/g, '');
