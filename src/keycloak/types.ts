@@ -23,7 +23,7 @@ export interface KeycloakConfig {
   oidcProvider?: string | OIDCProviderConfig;
 }
 
-export type KeycloakOnLoad = 'login-required';
+export type KeycloakOnLoad = 'login-required' | 'check-sso';
 
 export type KeycloakResponseMode = 'query' | 'fragment';
 

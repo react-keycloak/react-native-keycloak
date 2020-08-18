@@ -877,6 +877,9 @@ class KeycloakReactNativeClient implements KeycloakInstance {
         this.doLogin(initOptions, true);
         break;
 
+      case 'check-sso':
+        break;
+
       default:
         throw new Error('Invalid value for onLoad');
     }
