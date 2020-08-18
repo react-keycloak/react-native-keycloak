@@ -1,18 +1,21 @@
 import * as React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
-import Keycloak from 'react-native-keycloak';
+
+import { RNKeycloak, ReactNativeKeycloakProvider } from 'react-native-keycloak';
+
+const keycloak = new RNKeycloak({
+  url: 'http://keycloak-server/auth',
+  realm: 'kc-realm',
+  clientId: 'web',
+});
 
 export default function App() {
-  const [result, setResult] = React.useState<number | undefined>();
-
-  React.useEffect(() => {
-    Keycloak.multiply(3, 7).then(setResult);
-  }, []);
-
   return (
-    <View style={styles.container}>
-      <Text>Result: {result}</Text>
-    </View>
+    <ReactNativeKeycloakProvider authClient={keycloak}>
+      <View style={styles.container}>
+        <Text>Welcome!</Text>
+      </View>
+    </ReactNativeKeycloakProvider>
   );
 }
 
