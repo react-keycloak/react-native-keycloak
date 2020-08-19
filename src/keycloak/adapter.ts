@@ -21,7 +21,7 @@ class Adapter implements KeycloakAdapter {
    * @param {KeycloakLoginOptions} options Login options
    */
   public async login(options?: KeycloakLoginOptions): Promise<void> {
-    var loginUrl = this.kcClient.createLoginUrl(options);
+    const loginUrl = this.kcClient.createLoginUrl(options);
 
     if (await InAppBrowser.isAvailable()) {
       // See for more details https://github.com/proyecto26/react-native-inappbrowser#authentication-flow-using-deep-linking

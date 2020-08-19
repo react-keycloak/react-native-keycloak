@@ -18,6 +18,10 @@ export interface KeycloakConfig {
    */
   clientId: string;
   /**
+   * RedirectUrl identifier, example: 'myapp://page' or 'https://yourwebsite.extension'
+   */
+  redirectUrl: string;
+  /**
    * OIDC-specific configuration parameters
    */
   oidcProvider?: string | OIDCProviderConfig;

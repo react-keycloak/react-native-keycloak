@@ -1020,6 +1020,12 @@ class KeycloakReactNativeClient implements KeycloakInstance {
 
     this.clientId = config.clientId;
 
+    if (!config.redirectUrl) {
+      throw new Error('redirectUrl missing from configuration');
+    }
+
+    this.redirectUri = config.redirectUrl;
+
     const oidcProvider = config.oidcProvider;
     // When oidcProvider config is not supplied, use local configuration params
     if (!oidcProvider) {
