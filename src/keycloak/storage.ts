@@ -1,6 +1,6 @@
-import type { CallbackState } from './types';
+import type { CallbackState, CallbackStorage } from './types';
 
-class LocalStorage {
+class LocalStorage implements CallbackStorage {
   private storage = new Map<string, CallbackState>();
 
   get(state?: string) {
