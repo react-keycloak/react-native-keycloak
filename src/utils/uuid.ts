@@ -5,7 +5,7 @@ import { fromByteArray } from 'base64-js';
 function generateRandomString(len: number, alphabet: string) {
   const randomData = generateRandomData(len);
 
-  const chars = new Array(len).map((_, idx) =>
+  const chars = [...Array(len)].map((_, idx) =>
     alphabet.charCodeAt(randomData[idx] % alphabet.length)
   );
 
@@ -14,7 +14,7 @@ function generateRandomString(len: number, alphabet: string) {
 
 function generateRandomData(len: number): number[] {
   // TODO: Migrate to some Crypto-crap
-  return new Array(len).map(() => Math.floor(256 * Math.random()));
+  return [...Array(len)].map(() => Math.floor(256 * Math.random()));
 }
 
 export function generateCodeVerifier(len: number) {

@@ -54,7 +54,7 @@ export type CallbackState = {
 };
 
 export interface CallbackStorage {
-  get: (state: CallbackState) => CallbackState | undefined;
+  get: (state?: string) => CallbackState | undefined;
 
   add: (state: CallbackState) => void;
 }

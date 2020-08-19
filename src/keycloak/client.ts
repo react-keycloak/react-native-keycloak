@@ -351,7 +351,7 @@ class KeycloakReactNativeClient implements KeycloakInstance {
       nonce,
       pkceCodeVerifier: codeVerifier,
       prompt: options?.prompt ?? undefined,
-      redirectUri: redirectUri ? encodeURIComponent(redirectUri) : undefined,
+      redirectUri,
     };
 
     let scope;
@@ -738,6 +738,7 @@ class KeycloakReactNativeClient implements KeycloakInstance {
       params.set('grant_type', 'authorization_code');
       params.set('client_id', this.clientId!);
       params.set('redirect_uri', oauth.redirectUri!);
+
       if (oauth.pkceCodeVerifier) {
         params.set('code_verifier', oauth.pkceCodeVerifier);
       }
