@@ -18,10 +18,6 @@ export interface KeycloakConfig {
    */
   clientId: string;
   /**
-   * RedirectUrl identifier, example: 'myapp://page' or 'https://yourwebsite.extension'
-   */
-  redirectUrl: string;
-  /**
    * OIDC-specific configuration parameters
    */
   oidcProvider?: string | OIDCProviderConfig;
@@ -58,7 +54,7 @@ export type CallbackState = {
 };
 
 export interface CallbackStorage {
-  get: (state: CallbackState) => CallbackState | undefined;
+  get: (state?: string) => CallbackState | undefined;
 
   add: (state: CallbackState) => void;
 }

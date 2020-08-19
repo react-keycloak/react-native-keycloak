@@ -8,7 +8,7 @@ const Login = () => {
 
   return (
     <View style={styles.container}>
-      <Text>Welcome!</Text>
+      <Text>{`Welcome ${keycloak?.authenticated} - ${keycloak?.token}!`}</Text>
       <Button onPress={() => keycloak?.login()} title="Login" />
     </View>
   );

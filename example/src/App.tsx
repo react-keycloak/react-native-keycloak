@@ -7,12 +7,14 @@ const keycloak = new RNKeycloak({
   url: 'http://keycloak-server/auth',
   realm: 'kc-realm',
   clientId: 'web',
-  redirectUrl: 'myapp://',
 });
 
 export default function App() {
   return (
-    <ReactNativeKeycloakProvider authClient={keycloak}>
+    <ReactNativeKeycloakProvider
+      authClient={keycloak}
+      initOptions={{ redirectUri: 'myapp://Homepage' }}
+    >
       <Login />
     </ReactNativeKeycloakProvider>
   );

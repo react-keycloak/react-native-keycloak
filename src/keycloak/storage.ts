@@ -1,14 +1,14 @@
-import type { CallbackState, CallbackStorage } from './types';
+import type { CallbackState } from './types';
 
-class LocalStorage implements CallbackStorage {
+class LocalStorage {
   private storage = new Map<string, CallbackState>();
 
-  get(state: CallbackState): CallbackState | undefined {
+  get(state?: string) {
     if (!state) {
       return;
     }
 
-    const key = `kc-callback-${state.state}`;
+    const key = `kc-callback-${state}`;
     let value;
     if (this.storage.has(key)) {
       value = this.storage.get(key);
