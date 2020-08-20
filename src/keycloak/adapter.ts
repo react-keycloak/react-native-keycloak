@@ -47,20 +47,24 @@ class Adapter implements KeycloakAdapter {
   public async logout(options?: KeycloakLogoutOptions): Promise<void> {
     const logoutUrl = this.kcClient.createLogoutUrl(options);
 
-    const data = new FormData();
-    data.append('client_id', this.kcClient.clientId);
-    data.append('refresh_token', this.kcClient.refreshToken);
+    if (await InAppBrowser.isAvailable()) {
+      // See for more details https://github.com/proyecto26/react-native-inappbrowser#authentication-flow-using-deep-linking
+      const res = await InAppBrowser.openAuth(
+        logoutUrl,
+        this.kcClient.redirectUri!,
+        this.inAppBrowserOptions
+      );
 
-    await fetch(logoutUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.kcClient.token}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: data,
-    });
+      if (res.type === 'success') {
+        return this.kcClient.clearToken();
+      }
 
-    this.kcClient.clearToken();
+      throw new Error('Logout flow failed');
+    } else {
+      throw new Error('InAppBrowser not available');
+      // TODO: maybe!
+      //   Linking.openURL(logoutUrl);
+    }
   }
 
   public async register(options?: KeycloakRegisterOptions) {
@@ -83,7 +87,7 @@ class Adapter implements KeycloakAdapter {
     } else {
       throw new Error('InAppBrowser not available');
       // TODO: maybe!
-      //   Linking.openURL(loginURL);
+      //   Linking.openURL(registerUrl);
     }
   }
 
