@@ -6,8 +6,8 @@
 
 [![NPM (scoped)](https://img.shields.io/npm/v/@react-keycloak/native?label=npm%20%7C%20native)](https://www.npmjs.com/package/@react-keycloak/native)
 
-[![License](https://img.shields.io/github/license/react-keycloak/react-keycloak-native.svg)](https://github.com/react-keycloak/react-native-keycloak/blob/master/LICENSE)
-[![Github Issues](https://img.shields.io/github/issues/react-keycloak/react-keycloak-native.svg)](https://github.com/react-keycloak/react-native-keycloak/issues)
+[![License](https://img.shields.io/github/license/react-keycloak/react-native-keycloak.svg)](https://github.com/react-keycloak/react-native-keycloak/blob/master/LICENSE)
+[![Github Issues](https://img.shields.io/github/issues/react-keycloak/react-native-keycloak.svg)](https://github.com/react-keycloak/react-native-keycloak/issues)
 
 [![Gitter](https://img.shields.io/gitter/room/react-keycloak/community)](https://gitter.im/react-keycloak/community)
 
@@ -58,7 +58,7 @@ const keycloak = new RNKeycloak({
   inAppBrowserOptions: {
     // For iOS check: https://github.com/proyecto26/react-native-inappbrowser#ios-options
     // For Android check: https://github.com/proyecto26/react-native-inappbrowser#android-options
-  }
+  },
 });
 
 export default keycloak;
