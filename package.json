@@ -1,7 +1,25 @@
 {
-  "name": "react-native-keycloak",
+  "name": "@react-keycloak/native",
   "version": "0.1.0",
-  "description": "Description",
+  "license": "MIT",
+  "description": "React Native component for Keycloak javascript adapter",
+  "repository": "https://github.com/react-keycloak/react-native-keycloak",
+  "author": "IronTony <zimzum4@gmail.com> (https://github.com/IronTony)",
+  "bugs": {
+    "url": "https://github.com/react-keycloak/react-native-keycloak/issues"
+  },
+  "homepage": "https://github.com/react-keycloak/react-native-keycloak#readme",
+  "keywords": [
+    "react",
+    "react-native",
+    "ios",
+    "android",
+    "keycloak",
+    "keycloak-js"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/src/index.d.ts",
@@ -29,18 +47,6 @@
     "pods": "cd example && pod-install --quiet",
     "bootstrap": "yarn example && yarn && yarn pods"
   },
-  "keywords": [
-    "react-native",
-    "ios",
-    "android"
-  ],
-  "repository": "https://github.com/IronTony/react-native-keycloak",
-  "author": "IronTony <zimzum4@gmail.com> (https://github.com/IronTony)",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/IronTony/react-native-keycloak/issues"
-  },
-  "homepage": "https://github.com/IronTony/react-native-keycloak#readme",
   "devDependencies": {
     "@commitlint/config-conventional": "^8.3.4",
     "@react-native-community/bob": "^0.16.2",
