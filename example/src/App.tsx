@@ -1,6 +1,9 @@
 import * as React from 'react';
 
-import { RNKeycloak, ReactNativeKeycloakProvider } from 'react-native-keycloak';
+import {
+  RNKeycloak,
+  ReactNativeKeycloakProvider,
+} from '@react-keycloak/native';
 import Login from './Login';
 
 const keycloak = new RNKeycloak({

@@ -549,7 +549,7 @@ class KeycloakReactNativeClient implements KeycloakInstance {
           headers: {
             'Content-type': 'application/x-www-form-urlencoded',
           },
-          body: params,
+          body: params.toString(),
         });
 
         this.logInfo('[KEYCLOAK] Token refreshed');
@@ -750,7 +750,8 @@ class KeycloakReactNativeClient implements KeycloakInstance {
           headers: {
             'Content-type': 'application/x-www-form-urlencoded',
           },
-          body: params,
+          credentials: 'include',
+          body: params.toString(),
         });
 
         const tokenResponse = await tokenRes.json();

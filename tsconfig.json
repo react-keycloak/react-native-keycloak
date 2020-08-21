@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "react-native-keycloak": ["./src/index"]
+      "@react-keycloak/native": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
