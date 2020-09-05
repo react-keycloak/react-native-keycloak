@@ -1,4 +1,7 @@
-import type { CallbackState, CallbackStorage } from './types';
+import type {
+  CallbackState,
+  CallbackStorage,
+} from '@react-keycloak/keycloak-ts';
 
 class LocalStorage implements CallbackStorage {
   private storage = new Map<string, CallbackState>();
