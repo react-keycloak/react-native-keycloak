@@ -54,11 +54,6 @@ const keycloak = new RNKeycloak({
   url: 'http://keycloak-server/auth',
   realm: 'kc-realm',
   clientId: 'web',
-  // if you need to customize "react-native-inappbrowser-reborn" View you can use the following attribute
-  inAppBrowserOptions: {
-    // For iOS check: https://github.com/proyecto26/react-native-inappbrowser#ios-options
-    // For Android check: https://github.com/proyecto26/react-native-inappbrowser#android-options
-  },
 });
 
 export default keycloak;
@@ -77,7 +72,14 @@ import keycloak from './keycloak';
 const App = () => (
   <ReactNativeKeycloakProvider
     authClient={keycloak}
-    initOptions={{ redirectUri: 'myapp://Homepage' }}
+    initOptions={{
+      redirectUri: 'myapp://Homepage',
+      // if you need to customize "react-native-inappbrowser-reborn" View you can use the following attribute
+      inAppBrowserOptions: {
+        // For iOS check: https://github.com/proyecto26/react-native-inappbrowser#ios-options
+        // For Android check: https://github.com/proyecto26/react-native-inappbrowser#android-options
+      },
+    }}
   >
     <Login />
   </ReactNativeKeycloakProvider>
