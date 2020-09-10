@@ -16,6 +16,8 @@
 ## Table of Contents <!-- omit in toc -->
 
 - [Install](#install)
+  - [Setup Deep links (iOS)](#setup-deep-links-ios)
+  - [Setup Deep links (Android)](#setup-deep-links-android)
 - [Getting Started](#getting-started)
   - [Setup RNKeycloak instance](#setup-rnkeycloak-instance)
   - [Setup ReactNativeKeycloakProvider](#setup-reactnativekeycloakprovider)
@@ -31,13 +33,73 @@
 
 ```sh
 yarn add @react-keycloak/native
+yarn add react-native-inappbrowser-reborn
 ```
 
 or
 
 ```sh
 npm install @react-keycloak/native
+npm install react-native-inappbrowser-reborn --save
 ```
+
+You have to link `react-native-inappbrowser-reborn`.
+For more information about how to link it go to [Official repo on github](https://github.com/proyecto26/react-native-inappbrowser)
+
+### Setup Deep links (iOS)
+
+To navigate back from webview to you app, you have to configure deep linking.
+
+![image](https://user-images.githubusercontent.com/3645225/92749944-e3215080-f386-11ea-8ba7-7f0adf33a6e5.png)
+
+And in `AppDelegate.m`, add these lines:
+
+```
+#import <React/RCTLinkingManager.h>
+
+......
+......
+
+// Deep linking
+- (BOOL)application:(UIApplication *)application
+   openURL:(NSURL *)url
+   options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options
+{
+  return [RCTLinkingManager application:application openURL:url options:options];
+}
+```
+
+N.B.: replace `myapp` with the name of your app
+
+### Setup Deep links (Android)
+
+To configure the external linking in Android, you can create a new intent in the manifest.
+
+The easiest way to do this is with the `uri-scheme` package: `npx uri-scheme add myapp --android`
+
+If you want to add it manually, open up `YourApp/android/app/src/main/AndroidManifest.xml`, and make the following adjustments:
+
+1. Set `launchMode` of `MainActivity` to `singleTask` in order to receive intent on existing `MainActivity` (this is the default on all new projects, so you may not need to actually change anything!). It is useful if you want to perform navigation using deep link you have been registered - [details](http://developer.android.com/training/app-indexing/deep-linking.html#adding-filters)
+2. Add the new intent-filter inside the MainActivity entry with a VIEW type action:
+
+```
+<activity
+    android:name=".MainActivity"
+    android:launchMode="singleTask">
+    <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+    </intent-filter>
+    <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="myapp" />
+    </intent-filter>
+</activity>
+```
+
+N.B.: replace `myapp` with the name of your app
 
 ## Getting Started
 
