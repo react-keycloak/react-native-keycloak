@@ -149,7 +149,7 @@
   },
   "dependencies": {
     "@react-keycloak/core": "^3.0.0-alpha.3",
-    "@react-keycloak/keycloak-ts": "^0.1.0",
+    "@react-keycloak/keycloak-ts": "^0.2.0",
     "react-native-inappbrowser-reborn": "^3.4.0"
   }
 }
