@@ -1536,10 +1536,10 @@
   dependencies:
     "@types/node" ">= 8"
 
-"@react-keycloak/core@^3.0.0-alpha.3":
-  version "3.0.0-alpha.3"
-  resolved "https://registry.yarnpkg.com/@react-keycloak/core/-/core-3.0.0-alpha.3.tgz#b954cdc375cd1ba47c90af4b7ff8e0741b9fc1b8"
-  integrity sha512-w9XExzPuSg+W/vnaNLh+lBJl37W/E9Mo6sOJ4FTw/c6zMyilevAMpC6Y6CBhinZXbe9S7YtJzw/ApO01zBfwUQ==
+"@react-keycloak/core@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@react-keycloak/core/-/core-3.0.0.tgz#c7d27cb45e6c6c0c86e998525d8cedd191b8fb6e"
+  integrity sha512-T2w5phBXu8Uye8OcB0nzNccWcI1xDFKcp36KjBfBUHz8Ehc59ylvZicS+woNOxARmUsnbigcM9NcbARPW7pciA==
   dependencies:
     react-fast-compare "^3.2.0"
 
