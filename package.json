@@ -47,6 +47,15 @@
     "pods": "cd example && pod-install --quiet",
     "bootstrap": "yarn example && yarn && yarn pods"
   },
+  "dependencies": {
+    "@react-keycloak/core": "^3.0.0",
+    "@react-keycloak/keycloak-ts": "^0.2.0",
+    "react-native-inappbrowser-reborn": "^3.4.0"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
   "devDependencies": {
     "@commitlint/config-conventional": "^8.3.4",
     "@react-native-community/bob": "^0.16.2",
@@ -69,10 +78,6 @@
     "react-native": "0.62.2",
     "release-it": "^13.5.8",
     "typescript": "^3.8.3"
-  },
-  "peerDependencies": {
-    "react": "*",
-    "react-native": "*"
   },
   "jest": {
     "preset": "react-native",
@@ -146,10 +151,5 @@
       "module",
       "typescript"
     ]
-  },
-  "dependencies": {
-    "@react-keycloak/core": "^3.0.0-alpha.3",
-    "@react-keycloak/keycloak-ts": "^0.2.0",
-    "react-native-inappbrowser-reborn": "^3.4.0"
   }
 }
