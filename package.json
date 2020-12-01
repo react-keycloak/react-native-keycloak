@@ -1,6 +1,6 @@
 {
   "name": "@react-keycloak/native",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "license": "MIT",
   "description": "React Native component for Keycloak javascript adapter",
   "repository": "https://github.com/react-keycloak/react-native-keycloak",
