@@ -1536,17 +1536,17 @@
   dependencies:
     "@types/node" ">= 8"
 
-"@react-keycloak/core@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@react-keycloak/core/-/core-3.0.0.tgz#c7d27cb45e6c6c0c86e998525d8cedd191b8fb6e"
-  integrity sha512-T2w5phBXu8Uye8OcB0nzNccWcI1xDFKcp36KjBfBUHz8Ehc59ylvZicS+woNOxARmUsnbigcM9NcbARPW7pciA==
+"@react-keycloak/core@^3.2.0":
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/@react-keycloak/core/-/core-3.2.0.tgz#e46f1951b0d7873f7f2fcd73dd0c270cb0b18db8"
+  integrity sha512-1yzU7gQzs+6E1v6hGqxy0Q+kpMHg9sEcke2yxZR29WoU8KNE8E50xS6UbI8N7rWsgyYw8r9W1cUPCOF48MYjzw==
   dependencies:
     react-fast-compare "^3.2.0"
 
-"@react-keycloak/keycloak-ts@^0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@react-keycloak/keycloak-ts/-/keycloak-ts-0.2.0.tgz#3c0b2a66f030f5da18fdd465bcdb764b635c847c"
-  integrity sha512-JdVcCtghVO2sbxkmXK3x41WImAIP8oJHfXeazYVOveQozL1Q3bX97xVwA3QeMfmIQzag04GyKZ3lJoqf6QStPA==
+"@react-keycloak/keycloak-ts@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@react-keycloak/keycloak-ts/-/keycloak-ts-0.2.1.tgz#ae8ef66829604c8c9c0320642b29fcb1d53dc690"
+  integrity sha512-rP4GGfTGdnuIlqg/9NZ1Gua39NQfTqPa0iOmZROoE0Dq3xh/c3rfGBjuiOWI/4Xqraa3verVddiqR2owS2t/aA==
   dependencies:
     base64-js "^1.3.1"
     js-sha256 "^0.9.0"
@@ -7805,10 +7805,10 @@ react-is@^16.12.0, react-is@^16.8.1, react-is@^16.8.4:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
-react-native-inappbrowser-reborn@^3.4.0:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/react-native-inappbrowser-reborn/-/react-native-inappbrowser-reborn-3.4.0.tgz#fe449722e309c1611fa5e3a742a7e449aaf5a9e5"
-  integrity sha512-buHTc8xvjtO1pDKrGxgXetyV1D3XdmXJ+b8x1AW+PrKeLg8lzBdlVmSUtpIQBg98WPwK3FA08l/CvShocmvOyg==
+react-native-inappbrowser-reborn@^3.5.1:
+  version "3.5.1"
+  resolved "https://registry.yarnpkg.com/react-native-inappbrowser-reborn/-/react-native-inappbrowser-reborn-3.5.1.tgz#a17e6548ac7864f074f5df6171781601d179d638"
+  integrity sha512-pEM9DSvW3LYoI7x1sfr4GtTA1/BSzSoQvHeNRtbJwOpujgRBqnEQrapBwC/24l2pIRhKDWmXGfqc12478IXY3Q==
   dependencies:
     invariant "^2.2.4"
     opencollective-postinstall "^2.0.2"
