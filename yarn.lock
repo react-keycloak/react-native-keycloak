@@ -1543,14 +1543,14 @@
   dependencies:
     react-fast-compare "^3.2.0"
 
-"@react-keycloak/keycloak-ts@^0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@react-keycloak/keycloak-ts/-/keycloak-ts-0.2.1.tgz#ae8ef66829604c8c9c0320642b29fcb1d53dc690"
-  integrity sha512-rP4GGfTGdnuIlqg/9NZ1Gua39NQfTqPa0iOmZROoE0Dq3xh/c3rfGBjuiOWI/4Xqraa3verVddiqR2owS2t/aA==
+"@react-keycloak/keycloak-ts@^0.2.3":
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/@react-keycloak/keycloak-ts/-/keycloak-ts-0.2.3.tgz#b7448744fe63b887d90d62e506a92f231d1d3643"
+  integrity sha512-h8GXC9T0VT45CvA8/1lHeoYEmXi6fQvJt2x9OWxnwUGJ35RDlNEv9zVi5E02FgtBStbxkjfTUxesmVms1xkGGw==
   dependencies:
     base64-js "^1.3.1"
     js-sha256 "^0.9.0"
-    jwt-decode "^2.2.0"
+    jwt-decode "^3.1.2"
 
 "@react-native-community/bob@^0.16.2":
   version "0.16.2"
@@ -6189,10 +6189,10 @@ jsx-ast-utils@^2.4.1:
     array-includes "^3.1.1"
     object.assign "^4.1.0"
 
-jwt-decode@^2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/jwt-decode/-/jwt-decode-2.2.0.tgz#7d86bd56679f58ce6a84704a657dd392bba81a79"
-  integrity sha1-fYa9VmefWM5qhHBKZX3TkruoGnk=
+jwt-decode@^3.1.2:
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/jwt-decode/-/jwt-decode-3.1.2.tgz#3fb319f3675a2df0c2895c8f5e9fa4b67b04ed59"
+  integrity sha512-UfpWE/VZn0iP50d8cz9NrZLM9lSWhcJ+0Gt/nm4by88UL+J1SiKN8/5dkjMmbEzwL2CAe+67GsegCbIKtbp75A==
 
 keyv@^3.0.0:
   version "3.1.0"

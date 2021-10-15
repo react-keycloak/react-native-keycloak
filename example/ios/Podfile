@@ -1,14 +1,32 @@
-platform :ios, '9.0'
+platform :ios, '10.0'
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
+# fixes for last Mac updates
+def find_and_replace(dir, findstr, replacestr)
+  Dir[dir].each do |name|
+      text = File.read(name)
+      replace = text.gsub(findstr,replacestr)
+      if text != replace
+          puts "Fix: " + name
+          File.open(name, "w") { |file| file.puts replace }
+          STDOUT.flush
+      end
+  end
+  Dir[dir + '*/'].each(&method(:find_and_replace))
+end
+
 def add_flipper_pods!
-  version = '~> 0.33.1'
+  version = '~> 0.74.0'
+  # version['Flipper-Folly'] ||= '~> 2.5.3'
   pod 'FlipperKit', version, :configuration => 'Debug'
   pod 'FlipperKit/FlipperKitLayoutPlugin', version, :configuration => 'Debug'
   pod 'FlipperKit/SKIOSNetworkPlugin', version, :configuration => 'Debug'
   pod 'FlipperKit/FlipperKitUserDefaultsPlugin', version, :configuration => 'Debug'
   pod 'FlipperKit/FlipperKitReactPlugin', version, :configuration => 'Debug'
+  pod 'Flipper-Folly', '~> 2.5.3', :configuration => 'Debug'
+  pod 'Flipper-DoubleConversion', '~> 1.1.7', :configuration => 'Debug'
 end
+
 # Post Install processing for Flipper
 def flipper_post_install(installer)
   installer.pods_project.targets.each do |target|
@@ -63,5 +81,27 @@ target 'KeycloakExample' do
   add_flipper_pods!
   post_install do |installer|
     flipper_post_install(installer)
+
+    ## Fix for XCode 12.5 & RN 0.62.2 - See https://github.com/facebook/react-native/issues/28405
+    find_and_replace("../node_modules/react-native/React/CxxBridge/RCTCxxBridge.mm",
+      "_initializeModules:(NSArray<id<RCTBridgeModule>> *)modules", "_initializeModules:(NSArray<Class> *)modules")
+
+    find_and_replace("../node_modules/react-native/ReactCommon/turbomodule/core/platform/ios/RCTTurboModuleManager.mm",
+      "RCTBridgeModuleNameForClass(strongModule))", "RCTBridgeModuleNameForClass(Class(strongModule)))")
+
+    find_and_replace("Pods/Headers/Private/RCT-Folly/folly/synchronization/DistributedMutex-inl.h",
+      "atomic_notify_one(state)", "folly::atomic_notify_one(state)")
+
+    find_and_replace("Pods/Flipper-Folly/folly/synchronization/DistributedMutex-inl.h",
+      "atomic_wait_until(&state, previous | data, deadline)", "folly::atomic_wait_until(&state, previous | data, deadline)")
+
+    # To fix Facebook cocoapods 'sharedApplication' is unavailable: not available on iOS (App Extension)
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'No'
+      end
+    end
+
+    
   end
 end
