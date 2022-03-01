@@ -1543,10 +1543,10 @@
   dependencies:
     react-fast-compare "^3.2.0"
 
-"@react-keycloak/keycloak-ts@^0.2.3":
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/@react-keycloak/keycloak-ts/-/keycloak-ts-0.2.3.tgz#b7448744fe63b887d90d62e506a92f231d1d3643"
-  integrity sha512-h8GXC9T0VT45CvA8/1lHeoYEmXi6fQvJt2x9OWxnwUGJ35RDlNEv9zVi5E02FgtBStbxkjfTUxesmVms1xkGGw==
+"@react-keycloak/keycloak-ts@^0.2.4":
+  version "0.2.4"
+  resolved "https://registry.yarnpkg.com/@react-keycloak/keycloak-ts/-/keycloak-ts-0.2.4.tgz#fb55ca8e25eaa5d0c651664aeee044e96a71d099"
+  integrity sha512-Csw2qMdgc4HIbIjHcC8OJ1gBKzoF29E4S8nGTe2n6cI/3EA/dnEmcJI8l6VOVm8wYJPOtuf+ZkxvLsrCzQnpiw==
   dependencies:
     base64-js "^1.3.1"
     js-sha256 "^0.9.0"
