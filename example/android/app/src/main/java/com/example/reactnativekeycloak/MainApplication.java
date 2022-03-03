@@ -1,4 +1,4 @@
-import com.example.reactnativekeycloak.KeycloakPackage;
+package com.example.reactnativekeycloak;
 
 import android.app.Application;
 import android.content.Context;
