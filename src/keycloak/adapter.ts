@@ -147,6 +147,7 @@ class RNAdapter implements KeycloakAdapter {
       body: params,
     });
 
+    if (!tokenRes.ok) throw new Error('fetchTokens failed');
     return (await tokenRes.json()) as FetchTokenResponse;
   }
 
@@ -162,6 +163,7 @@ class RNAdapter implements KeycloakAdapter {
       body: params,
     });
 
+    if (!tokenRes.ok) throw new Error('refreshTokens failed');
     return (await tokenRes.json()) as FetchTokenResponse;
   }
 
