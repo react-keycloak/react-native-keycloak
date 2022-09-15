@@ -1,6 +1,6 @@
 {
   "name": "@react-keycloak/native",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "license": "MIT",
   "description": "React Native component for Keycloak javascript adapter",
   "repository": "https://github.com/react-keycloak/react-native-keycloak",
@@ -50,7 +50,7 @@
   "dependencies": {
     "@react-keycloak/core": "^3.2.0",
     "@react-keycloak/keycloak-ts": "^0.2.4",
-    "react-native-inappbrowser-reborn": "^3.6.3"
+    "react-native-inappbrowser-reborn": "^3.7.0"
   },
   "peerDependencies": {
     "react": "*",
